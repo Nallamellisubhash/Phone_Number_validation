@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Validate Phone</title>
+    <link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+<body>
+    <header>
+        <h1 class="title">PhoneValidator: Your Phone Number Validator</h1>
+        <nav>
+            <ul>
+                <li class="right"><a href="/">Home</a></li>
+                <li class="right"><a href="/login.html">Login</a></li>
+                <li class="right"><a href="/signup.html">Sign Up</a></li>
+                <li><a href="/dashboard">Dashboard</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="dashboard-container">
+        <section>
+            <marquee>Welcome to the Phone Number Validation Service!</marquee>
+            <p>Enter a phone number to validate its details.</p>
+            <form id="phoneSearchForm">
+                <label for="phone">Enter Phone Number:</label>
+                <input type="text" id="phone" name="phone" required>
+                <button type="submit">Validate</button>
+            </form>
+            <div id="phoneValidationResult">
+                <!-- Validation results will be displayed here -->
+            </div>
+        </section>
+        
+        <footer>
+            <marquee><p>“Phone validation ensures you're always connected with the right people.”</p></marquee>
+            <p>&copy; 2024 Phone Number Validator</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('phoneSearchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const phone = document.getElementById('phone').value;
+            fetchPhoneValidationData(phone);
+        });
+
+        async function fetchPhoneValidationData(phone) {
+            try {
+                const response = await fetch('/validatePhoneNumber', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phoneNumber: phone }),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Invalid response format: ${errorText}`);
+                }
+
+                const data = await response.json();
+                displayPhoneValidationResult(data);
+            } catch (error) {
+                console.error('Error fetching phone validation data:', error);
+                displayError('Error fetching phone validation data. Please try again later.');
+            }
+        }
+
+        function displayPhoneValidationResult(data) {
+            const validationResult = document.getElementById('phoneValidationResult');
+            validationResult.innerHTML = '';
+
+            const isValid = data.is_valid ? 'Valid' : 'Invalid';
+            const validationStatusImg = data.is_valid ? 'valid.png' : 'invalid.png';
+
+            const resultHTML = `
+                <table>
+                    <tr>
+                        <th>Status</th>
+                        <td>${isValid} <img src="/images/${validationStatusImg}" alt="${isValid} Icon"></td>
+                    </tr>
+                   
+                    <tr>
+                        <th>Country</th>
+                        <td>${data.country}</td>
+                    </tr>
+                    <tr>
+                        <th>Location</th>
+                        <td>${data.location}</td>
+                    </tr>
+                    <tr>
+                        <th>Timezones</th>
+                        <td>${data.timezones.join(', ')}</td>
+                    </tr>
+                    <tr>
+                        <th>National Format</th>
+                        <td>${data.format_national}</td>
+                    </tr>
+                    <tr>
+                        <th>International Format</th>
+                        <td>${data.format_international}</td>
+                    </tr>
+                    <tr>
+                        <th>E.164 Format</th>
+                        <td>${data.format_e164}</td>
+                    </tr>
+                    <tr>
+                        <th>Country Code</th>
+                        <td>${data.country_code}</td>
+                    </tr>
+                </table>
+            `;
+
+            validationResult.innerHTML = resultHTML;
+        }
+
+        function displayError(errorMessage) {
+            const validationResult = document.getElementById('phoneValidationResult');
+            validationResult.innerHTML = `
+                <p class="error">${errorMessage}</p>
+                <img src="/images/error.png" alt="Error Icon">
+            `;
+        }
+    </script>
+</body>
+</html>
